@@ -1,11 +1,11 @@
 {
   "name": "metrabase",
   "version": "1.0.0",
-  "description": "High-performance media capture suite",
+  "description": "High-performance media capture suite for Windows.",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --win portable"
+    "build": "electron-builder --win msi"
   },
   "author": "Matthew",
   "license": "ISC",
@@ -15,13 +15,33 @@
   },
   "build": {
     "appId": "com.metrabase.app",
+    "productName": "Metrabase",
+    "copyright": "Copyright © 2026 Matthew",
+    "directories": {
+      "output": "dist"
+    },
     "win": {
       "icon": "icon.ico",
-      "target": "portable"
+      "target": [
+        {
+          "target": "msi",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "msi": {
+      "oneClick": false,
+      "perMachine": true,
+      "shortcutName": "Metrabase",
+      "runAfterFinish": true
     },
     "files": [
       "**/*",
-      "!history.csv"
+      "!history.csv",
+      "!dist/*",
+      "!node_modules/*"
     ]
   }
 }

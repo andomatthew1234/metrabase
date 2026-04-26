@@ -15,9 +15,9 @@ Metrabase is a sleek, dark-mode-ready Electron application designed to download 
 * **Engine:** Python + yt-dlp
 
 ## 🚀 Let's get started
-1. Clone the repo.
-2. Run `npm install`.
-3. Launch with `npm start`.
+1. Select a Metrabase release in the sidebar of this GitHub page (in the releases area!)
+2. Read and follow the instructions to install Metrabase.
+3. Launch the app and enjoy the worlds best video downloader app!
 
 ---
 *Created by Matthew*
