@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Metrabase</title>
+    <style>
+        :root {
+            --brand-purple: #2e14a3;
+            --bg-light: #f4f4f9;
+            --card-light: #ffffff;
+            --text-light: #2f3640;
+            --transition: 0.3s ease;
+        }
+
+        body.dark-mode {
+            --bg-light: #0f0c29;
+            --card-light: #1a1a2e;
+            --text-light: #e0e0e0;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-light); color: var(--text-light); margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; transition: var(--transition); }
+        
+        /* Splash Screen */
+        #splash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--brand-purple); z-index: 100; display: flex; justify-content: center; align-items: center; animation: fadeOut 1.5s forwards 1.5s; }
+        #splash img { width: 150px; animation: scaleUp 0.8s ease-out; }
+
+        @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
+        @keyframes scaleUp { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* Navigation */
+        .top-bar { position: absolute; top: 0; width: 100%; padding: 20px; display: flex; justify-content: space-between; box-sizing: border-box; z-index: 10; }
+        .btn-ui { background: var(--card-light); border: 2px solid var(--brand-purple); color: var(--brand-purple); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: var(--transition); }
+        .btn-ui:hover { background: var(--brand-purple); color: white; }
+
+        /* Container */
+        .container { background: var(--card-light); padding: 40px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); width: 400px; text-align: center; border: 1px solid rgba(46, 20, 163, 0.1); }
+        h1 { font-weight: 800; color: var(--brand-purple); margin-bottom: 30px; letter-spacing: -1.5px; font-size: 32px; }
+        
+        input, select { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #e1e1e1; border-radius: 12px; background: var(--card-light); color: var(--text-light); font-size: 14px; box-sizing: border-box; outline: none; transition: var(--transition); }
+        input:focus { border-color: var(--brand-purple); }
+        
+        button#dlBtn { width: 100%; padding: 16px; background: var(--brand-purple); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 15px; font-size: 16px; box-shadow: 0 4px 15px rgba(46, 20, 163, 0.3); }
+        button#dlBtn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(46, 20, 163, 0.4); }
+        
+        #status { margin-top: 20px; font-size: 13px; opacity: 0.7; font-weight: 500; }
+
+        /* Queue Overlay */
+        #queueOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-light); z-index: 50; display: none; flex-direction: column; align-items: center; padding-top: 80px; }
+        .queue-list { width: 85%; max-height: 60vh; overflow-y: auto; background: var(--card-light); border-radius: 15px; padding: 20px; border: 1px solid rgba(46, 20, 163, 0.1); }
+        .queue-item { padding: 12px; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 13px; display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
+
+    <div id="splash">
+        <img src="brand.png" alt="Metrabase Logo">
+    </div>
+
+    <div class="top-bar">
+        <button class="btn-ui" onclick="toggleDarkMode()">🌓 Mode</button>
+        <button class="btn-ui" onclick="toggleQueue()">Queue (<span id="queueCount">0</span>)</button>
+    </div>
+
+    <div class="container">
+        <h1>Metrabase</h1>
+        <input type="text" id="url" placeholder="Paste link here">
+        <select id="mode">
+            <option value="video">MP4 Video</option>
+            <option value="audio">MP3 Audio</option>
+        </select>
+        <button id="dlBtn">Add to Queue</button>
+        <div id="status">Ready for action</div>
+    </div>
+
+    <div id="queueOverlay">
+        <h2 style="color: var(--brand-purple);">Active Queue</h2>
+        <div class="queue-list" id="queueList"></div>
+        <button class="btn-ui" style="margin-top: 20px;" onclick="toggleQueue()">Close</button>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+        const dlBtn = document.getElementById('dlBtn');
+        const status = document.getElementById('status');
+        const queueOverlay = document.getElementById('queueOverlay');
+
+        // Dark Mode Logic
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        }
+        if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+
+        dlBtn.addEventListener('click', () => {
+            const url = document.getElementById('url').value;
+            const mode = document.getElementById('mode').value;
+            if (!url.includes('http')) { status.innerText = "Invalid URL"; return; }
+            ipcRenderer.send('add-to-queue', { url, mode });
+            document.getElementById('url').value = '';
+        });
+
+        function toggleQueue() {
+            const isVisible = queueOverlay.style.display === 'flex';
+            queueOverlay.style.display = isVisible ? 'none' : 'flex';
+            if (!isVisible) ipcRenderer.send('get-queue');
+        }
+
+        ipcRenderer.on('status', (e, msg) => status.innerText = msg);
+        ipcRenderer.on('update-queue', (e, queue) => {
+            document.getElementById('queueCount').innerText = queue.length;
+            const list = document.getElementById('queueList');
+            list.innerHTML = queue.length === 0 ? '<p>Empty</p>' : '';
+            queue.forEach((item, i) => {
+                const div = document.createElement('div');
+                div.className = 'queue-item';
+                div.innerHTML = `<span><b>${i+1}.</b> ${item.url.substring(0, 30)}...</span> <span>${item.mode.toUpperCase()}</span>`;
+                list.appendChild(div);
+            });
+        });
+    </script>
+</body>
+</html>
