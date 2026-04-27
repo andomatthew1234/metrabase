@@ -5,141 +5,165 @@
     <title>Metrabase</title>
     <style>
         :root {
-            --brand-purple: #2e14a3;
-            --bg-light: #f4f4f9;
-            --card-light: #ffffff;
-            --text-light: #2f3640;
-            --transition: 0.3s ease;
+            --brand-main: #2e14a3;
+            --bg-app: #f4f4f9;
+            --card-bg: #ffffff;
+            --text-main: #2f3640;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        body.dark-mode {
-            --bg-light: #0f0c29;
-            --card-light: #1a1a2e;
-            --text-light: #e0e0e0;
+        [data-theme="dark"] { --brand-main: #2e14a3; --bg-app: #0f0c29; --card-bg: #1a1a2e; --text-main: #e0e0e0; }
+        [data-theme="green-dark"] { --brand-main: #00ff41; --bg-app: #0d1117; --card-bg: #161b22; --text-main: #00ff41; }
+        [data-theme="rgb"] { --bg-app: #050505; --card-bg: #111111; --text-main: #ffffff; animation: rgb-text 5s infinite linear; }
+
+        @keyframes rgb-text {
+            0% { --brand-main: #ff0000; color: #ff0000; }
+            33% { --brand-main: #00ff00; color: #00ff00; }
+            66% { --brand-main: #0088ff; color: #0088ff; }
+            100% { --brand-main: #ff0000; color: #ff0000; }
         }
 
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-light); color: var(--text-light); margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; transition: var(--transition); }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-app); color: var(--text-main); margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; transition: var(--transition); }
         
-        /* Splash Screen */
-        #splash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--brand-purple); z-index: 100; display: flex; justify-content: center; align-items: center; animation: fadeOut 1.5s forwards 1.5s; }
-        #splash img { width: 150px; animation: scaleUp 0.8s ease-out; }
-
+        #splash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--brand-main); z-index: 100; display: flex; justify-content: center; align-items: center; animation: fadeOut 1.2s forwards 1s; }
+        #splash img { width: 140px; }
         @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
-        @keyframes scaleUp { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        /* Navigation */
-        .top-bar { position: absolute; top: 0; width: 100%; padding: 20px; display: flex; justify-content: space-between; box-sizing: border-box; z-index: 10; }
-        .btn-ui { background: var(--card-light); border: 2px solid var(--brand-purple); color: var(--brand-purple); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: var(--transition); }
-        .btn-ui:hover { background: var(--brand-purple); color: white; }
+        .top-bar { position: absolute; top: 0; width: 100%; padding: 25px; display: flex; justify-content: space-between; box-sizing: border-box; z-index: 10; }
+        .nav-group { display: flex; gap: 10px; }
+        .btn-ui { background: var(--card-bg); border: 2px solid var(--brand-main); color: var(--brand-main); padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: var(--transition); font-size: 12px; }
+        .btn-ui:hover { background: var(--brand-main); color: white; }
 
-        /* Container */
-        .container { background: var(--card-light); padding: 40px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); width: 400px; text-align: center; border: 1px solid rgba(46, 20, 163, 0.1); }
-        h1 { font-weight: 800; color: var(--brand-purple); margin-bottom: 30px; letter-spacing: -1.5px; font-size: 32px; }
+        .container { background: var(--card-bg); padding: 40px; border-radius: 28px; box-shadow: 0 25px 60px rgba(0,0,0,0.1); width: 420px; text-align: center; border: 1px solid var(--brand-main); position: relative; }
+        h1 { font-weight: 800; color: var(--brand-main); margin-bottom: 30px; font-size: 34px; letter-spacing: -1.5px; }
         
-        input, select { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #e1e1e1; border-radius: 12px; background: var(--card-light); color: var(--text-light); font-size: 14px; box-sizing: border-box; outline: none; transition: var(--transition); }
-        input:focus { border-color: var(--brand-purple); }
+        input, select { width: 100%; padding: 16px; margin: 10px 0; border: 2px solid rgba(128, 128, 128, 0.15); border-radius: 14px; background: var(--card-bg); color: var(--text-main); outline: none; }
+        button#dlBtn { width: 100%; padding: 18px; background: var(--brand-main); color: white; border: none; border-radius: 14px; font-weight: 800; cursor: pointer; margin-top: 10px; }
 
-        /* Toggle Styling */
-        .toggle-row { display: flex; align-items: center; justify-content: space-between; margin: 15px 0; padding: 0 5px; }
-        .toggle-text { font-size: 13px; font-weight: 600; opacity: 0.8; }
-        .switch { position: relative; display: inline-block; width: 42px; height: 22px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--brand-purple); }
-        input:checked + .slider:before { transform: translateX(20px); }
-        
-        button#dlBtn { width: 100%; padding: 16px; background: var(--brand-purple); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 5px; font-size: 16px; box-shadow: 0 4px 15px rgba(46, 20, 163, 0.3); }
-        button#dlBtn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(46, 20, 163, 0.4); }
-        
-        #status { margin-top: 20px; font-size: 13px; opacity: 0.7; font-weight: 500; }
+        /* Overlays */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-app); z-index: 50; display: none; flex-direction: column; align-items: center; padding-top: 90px; }
+        .list-box { width: 85%; max-height: 60vh; overflow-y: auto; background: var(--card-bg); border-radius: 20px; padding: 20px; border: 1px solid var(--brand-main); }
+        .item-row { padding: 12px; border-bottom: 1px solid rgba(128,128,128,0.1); font-size: 13px; }
+        .item-meta { display: flex; justify-content: space-between; font-size: 11px; opacity: 0.7; font-weight: bold; margin-top: 5px; background: rgba(128,128,128,0.05); padding: 5px; border-radius: 5px; }
 
-        /* Queue Overlay */
-        #queueOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-light); z-index: 50; display: none; flex-direction: column; align-items: center; padding-top: 80px; }
-        .queue-list { width: 85%; max-height: 60vh; overflow-y: auto; background: var(--card-light); border-radius: 15px; padding: 20px; border: 1px solid rgba(46, 20, 163, 0.1); }
-        .queue-item { padding: 12px; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 13px; display: flex; justify-content: space-between; }
+        .theme-menu { position: absolute; top: 50px; left: 0; background: var(--card-bg); border: 2px solid var(--brand-main); border-radius: 12px; display: none; flex-direction: column; padding: 5px; }
+        .theme-option { padding: 8px 15px; cursor: pointer; border-radius: 6px; font-size: 12px; }
+        .theme-option:hover { background: var(--brand-main); color: white; }
     </style>
 </head>
 <body>
 
-    <div id="splash">
-        <img src="brand.png" alt="Metrabase Logo">
-    </div>
+    <div id="splash"><img src="brand.png" alt="Logo"></div>
 
     <div class="top-bar">
-        <button class="btn-ui" onclick="toggleDarkMode()">🌓 Mode</button>
-        <button class="btn-ui" onclick="toggleQueue()">Queue (<span id="queueCount">0</span>)</button>
+        <div class="nav-group">
+            <div style="position:relative;">
+                <button class="btn-ui" onclick="toggleThemeMenu()">🎨 Themes</button>
+                <div class="theme-menu" id="themeMenu">
+                    <div class="theme-option" onclick="applyTheme('light')">Light</div>
+                    <div class="theme-option" onclick="applyTheme('dark')">Dark</div>
+                    <div class="theme-option" onclick="applyTheme('green-dark')">Matrix</div>
+                    <div class="theme-option" onclick="applyTheme('rgb')">RGB</div>
+                </div>
+            </div>
+            <button class="btn-ui" onclick="toggleOverlay('historyOverlay')">📜 History</button>
+        </div>
+        <button class="btn-ui" onclick="toggleOverlay('queueOverlay')">Queue (<span id="queueCount">0</span>)</button>
     </div>
 
     <div class="container">
         <h1>Metrabase</h1>
-        <input type="text" id="url" placeholder="Paste link here">
+        <input type="text" id="url" placeholder="Paste URL">
         <select id="mode">
             <option value="video">MP4 Video</option>
             <option value="audio">MP3 Audio</option>
         </select>
-        
-        <div class="toggle-row">
-            <span class="toggle-text">Download Full Playlist/Radio</span>
-            <label class="switch">
-                <input type="checkbox" id="playlistToggle">
-                <span class="slider"></span>
-            </label>
-        </div>
-
         <button id="dlBtn">Add to Queue</button>
-        <div id="status">Ready for action</div>
+        <div id="status" style="margin-top:20px; font-size:12px; opacity:0.6;">Ready</div>
     </div>
 
-    <div id="queueOverlay">
-        <h2 style="color: var(--brand-purple);">Active Queue</h2>
-        <div class="queue-list" id="queueList"></div>
-        <button class="btn-ui" style="margin-top: 20px;" onclick="toggleQueue()">Close</button>
+    <div id="queueOverlay" class="overlay">
+        <h2>Active Queue</h2>
+        <div class="list-box" id="queueList"></div>
+        <button class="btn-ui" style="margin-top:20px;" onclick="toggleOverlay('queueOverlay')">Close</button>
+    </div>
+
+    <div id="historyOverlay" class="overlay">
+        <h2>History</h2>
+        <div class="list-box" id="historyList"></div>
+        <button class="btn-ui" style="margin-top:20px;" onclick="toggleOverlay('historyOverlay')">Close</button>
     </div>
 
     <script>
         const { ipcRenderer } = require('electron');
-        const dlBtn = document.getElementById('dlBtn');
-        const status = document.getElementById('status');
-        const queueOverlay = document.getElementById('queueOverlay');
+        
+        function toggleThemeMenu() { const m = document.getElementById('themeMenu'); m.style.display = m.style.display === 'flex' ? 'none' : 'flex'; }
+        function applyTheme(t) { document.documentElement.setAttribute('data-theme', t); localStorage.setItem('theme', t); document.getElementById('themeMenu').style.display='none'; }
+        applyTheme(localStorage.getItem('theme') || 'light');
 
-        // Dark Mode Logic
-        function toggleDarkMode() {
-            document.body.classList.toggle('dark-mode');
-            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        function toggleOverlay(id) {
+            const el = document.getElementById(id);
+            const isVisible = el.style.display === 'flex';
+            document.querySelectorAll('.overlay').forEach(o => o.style.display = 'none');
+            if (!isVisible) {
+                el.style.display = 'flex';
+                ipcRenderer.send(id === 'historyOverlay' ? 'get-history' : 'get-queue');
+            }
         }
-        if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
 
-        dlBtn.addEventListener('click', () => {
+        document.getElementById('dlBtn').addEventListener('click', () => {
             const url = document.getElementById('url').value;
-            const mode = document.getElementById('mode').value;
-            const isPlaylist = document.getElementById('playlistToggle').checked;
-
-            if (!url.includes('http')) { status.innerText = "Invalid URL"; return; }
-            
-            ipcRenderer.send('add-to-queue', { url, mode, isPlaylist });
-            document.getElementById('url').value = '';
-            document.getElementById('playlistToggle').checked = false; // Reset toggle
+            if (url) {
+                ipcRenderer.send('add-to-queue', { url, mode: document.getElementById('mode').value });
+                document.getElementById('url').value = '';
+            }
         });
 
-        function toggleQueue() {
-            const isVisible = queueOverlay.style.display === 'flex';
-            queueOverlay.style.display = isVisible ? 'none' : 'flex';
-            if (!isVisible) ipcRenderer.send('get-queue');
+        function parseTime(s, e) {
+            if (!s || !e) return "---";
+            const toD = (str) => {
+                const [dp, tp, ap] = str.split(' ');
+                const [d, m, y] = dp.replace(',','').split('/');
+                const [hh, mm, ss] = tp.split(':');
+                let h = parseInt(hh);
+                if (ap.toLowerCase() === 'pm' && h < 12) h += 12;
+                if (ap.toLowerCase() === 'am' && h === 12) h = 0;
+                return new Date(y, m-1, d, h, mm, ss);
+            };
+            const start = toD(s), end = toD(e);
+            const diff = Math.max(0, Math.floor((end - start) / 1000));
+            return diff < 60 ? `${diff}s` : `${Math.floor(diff/60)}m ${diff%60}s`;
         }
 
-        ipcRenderer.on('status', (e, msg) => status.innerText = msg);
-        ipcRenderer.on('update-queue', (e, queue) => {
-            document.getElementById('queueCount').innerText = queue.length;
-            const list = document.getElementById('queueList');
-            list.innerHTML = queue.length === 0 ? '<p>Empty</p>' : '';
-            queue.forEach((item, i) => {
+        ipcRenderer.on('update-history', (ev, data) => {
+            const list = document.getElementById('historyList');
+            list.innerHTML = data.length ? '' : '<p>Empty</p>';
+            data.forEach(item => {
                 const div = document.createElement('div');
-                div.className = 'queue-item';
-                div.innerHTML = `<span><b>${i+1}.</b> ${item.url.substring(0, 30)}...</span> <span>${item.mode.toUpperCase()}${item.isPlaylist ? ' (PL)' : ''}</span>`;
+                div.className = 'item-row';
+                div.innerHTML = `<div style="word-break:break-all;">${item.url}</div>
+                    <div class="item-meta">
+                        <span>${item.mode.toUpperCase()}</span>
+                        <span>⏱ ${item.start ? parseTime(item.start, item.end) : "Waiting..."}</span>
+                        <span style="color:${item.status === 'Success' ? 'var(--brand-main)' : 'red'}">${item.status}</span>
+                    </div>`;
                 list.appendChild(div);
             });
         });
+
+        ipcRenderer.on('update-queue', (ev, q) => {
+            document.getElementById('queueCount').innerText = q.length;
+            const list = document.getElementById('queueList');
+            list.innerHTML = q.length ? '' : '<p>Empty</p>';
+            q.forEach((item, i) => {
+                const div = document.createElement('div');
+                div.className = 'item-row';
+                div.innerHTML = `<b>${i+1}.</b> ${item.url.substring(0, 50)}...`;
+                list.appendChild(div);
+            });
+        });
+
+        ipcRenderer.on('status', (ev, m) => document.getElementById('status').innerText = m);
     </script>
 </body>
 </html>

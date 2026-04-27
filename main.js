@@ -20,12 +20,10 @@ function createWindow() {
 
   mainWindow.setMenu(null); 
   mainWindow.loadFile('index.html');
-
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
-  });
+  mainWindow.once('ready-to-show', () => { mainWindow.show(); });
 }
 
+// History CSV Logger
 function logStatus(url, status, mode) {
   const historyPath = path.join(__dirname, 'history.csv');
   const timestamp = new Date().toLocaleString();
@@ -40,6 +38,7 @@ app.whenReady().then(createWindow);
 let downloadQueue = [];
 let isDownloading = false;
 
+// Queue Processor
 function processQueue() {
   if (isDownloading || downloadQueue.length === 0) return;
   isDownloading = true;
@@ -48,7 +47,6 @@ function processQueue() {
   mainWindow.webContents.send('status', `Downloading: ${currentTask.url}`);
   logStatus(currentTask.url, 'Downloading Now', currentTask.mode);
 
-  // Command logic for Playlist vs Single Video
   let playlistFlag = currentTask.isPlaylist ? '--yes-playlist' : '--no-playlist';
   let args = ['-m', 'yt_dlp', playlistFlag];
   
@@ -59,7 +57,6 @@ function processQueue() {
   }
 
   const ls = spawn('python', args);
-  ls.stdout.on('data', (data) => console.log(`yt-dlp: ${data}`));
 
   ls.on('close', (code) => {
     logStatus(currentTask.url, code === 0 ? 'Success' : 'Error', currentTask.mode);
@@ -71,24 +68,51 @@ function processQueue() {
   });
 }
 
+// IPC Handlers
 ipcMain.on('add-to-queue', async (event, data) => {
   const result = await dialog.showOpenDialog(mainWindow, { properties: ['openDirectory'] });
   if (result.canceled) return;
   const savePath = result.filePaths[0].replace(/\\/g, '/');
   
-  // Added isPlaylist to the task data
-  downloadQueue.push({ 
-    url: data.url, 
-    mode: data.mode, 
-    savePath: savePath, 
-    isPlaylist: data.isPlaylist 
-  });
-  
+  downloadQueue.push({ url: data.url, mode: data.mode, savePath: savePath, isPlaylist: data.isPlaylist });
   logStatus(data.url, 'In Queue', data.mode);
   event.reply('update-queue', downloadQueue);
   if (!isDownloading) processQueue();
-  else event.reply('status', 'Added to queue!');
 });
 
 ipcMain.on('get-queue', (event) => event.reply('update-queue', downloadQueue));
+
+ipcMain.on('get-history', (event) => {
+  const historyPath = path.join(__dirname, 'history.csv');
+  if (!fs.existsSync(historyPath)) return event.reply('update-history', []);
+
+  fs.readFile(historyPath, 'utf8', (err, data) => {
+    if (err) return event.reply('update-history', []);
+    
+    const lines = data.trim().split('\n');
+    const historyMap = {};
+
+    lines.forEach(line => {
+      const parts = line.split('","').map(p => p.replace(/"/g, ''));
+      if (parts.length < 4) return;
+      const [timestamp, url, mode, status] = parts;
+      
+      if (!historyMap[url]) {
+        historyMap[url] = { url, mode, start: null, end: null, status: status };
+      }
+      
+      // Update start time only when it actually hits the downloader
+      if (status === 'Downloading Now') {
+        historyMap[url].start = timestamp;
+      }
+      
+      if (status === 'Success' || status === 'Error') {
+        historyMap[url].end = timestamp;
+        historyMap[url].status = status;
+      }
+    });
+    event.reply('update-history', Object.values(historyMap).reverse());
+  });
+});
+
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
