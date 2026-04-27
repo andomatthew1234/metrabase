@@ -38,8 +38,18 @@
         
         input, select { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #e1e1e1; border-radius: 12px; background: var(--card-light); color: var(--text-light); font-size: 14px; box-sizing: border-box; outline: none; transition: var(--transition); }
         input:focus { border-color: var(--brand-purple); }
+
+        /* Toggle Styling */
+        .toggle-row { display: flex; align-items: center; justify-content: space-between; margin: 15px 0; padding: 0 5px; }
+        .toggle-text { font-size: 13px; font-weight: 600; opacity: 0.8; }
+        .switch { position: relative; display: inline-block; width: 42px; height: 22px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--brand-purple); }
+        input:checked + .slider:before { transform: translateX(20px); }
         
-        button#dlBtn { width: 100%; padding: 16px; background: var(--brand-purple); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 15px; font-size: 16px; box-shadow: 0 4px 15px rgba(46, 20, 163, 0.3); }
+        button#dlBtn { width: 100%; padding: 16px; background: var(--brand-purple); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 5px; font-size: 16px; box-shadow: 0 4px 15px rgba(46, 20, 163, 0.3); }
         button#dlBtn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(46, 20, 163, 0.4); }
         
         #status { margin-top: 20px; font-size: 13px; opacity: 0.7; font-weight: 500; }
@@ -68,6 +78,15 @@
             <option value="video">MP4 Video</option>
             <option value="audio">MP3 Audio</option>
         </select>
+        
+        <div class="toggle-row">
+            <span class="toggle-text">Download Full Playlist/Radio</span>
+            <label class="switch">
+                <input type="checkbox" id="playlistToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+
         <button id="dlBtn">Add to Queue</button>
         <div id="status">Ready for action</div>
     </div>
@@ -94,9 +113,13 @@
         dlBtn.addEventListener('click', () => {
             const url = document.getElementById('url').value;
             const mode = document.getElementById('mode').value;
+            const isPlaylist = document.getElementById('playlistToggle').checked;
+
             if (!url.includes('http')) { status.innerText = "Invalid URL"; return; }
-            ipcRenderer.send('add-to-queue', { url, mode });
+            
+            ipcRenderer.send('add-to-queue', { url, mode, isPlaylist });
             document.getElementById('url').value = '';
+            document.getElementById('playlistToggle').checked = false; // Reset toggle
         });
 
         function toggleQueue() {
@@ -113,7 +136,7 @@
             queue.forEach((item, i) => {
                 const div = document.createElement('div');
                 div.className = 'queue-item';
-                div.innerHTML = `<span><b>${i+1}.</b> ${item.url.substring(0, 30)}...</span> <span>${item.mode.toUpperCase()}</span>`;
+                div.innerHTML = `<span><b>${i+1}.</b> ${item.url.substring(0, 30)}...</span> <span>${item.mode.toUpperCase()}${item.isPlaylist ? ' (PL)' : ''}</span>`;
                 list.appendChild(div);
             });
         });

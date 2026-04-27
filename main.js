@@ -11,7 +11,7 @@ function createWindow() {
     height: 700,
     title: "Metrabase",
     icon: path.join(__dirname, 'icon.ico'),
-    show: false, // Don't show immediately to allow splash effect
+    show: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -48,7 +48,10 @@ function processQueue() {
   mainWindow.webContents.send('status', `Downloading: ${currentTask.url}`);
   logStatus(currentTask.url, 'Downloading Now', currentTask.mode);
 
-  let args = ['-m', 'yt_dlp', '--no-playlist'];
+  // Command logic for Playlist vs Single Video
+  let playlistFlag = currentTask.isPlaylist ? '--yes-playlist' : '--no-playlist';
+  let args = ['-m', 'yt_dlp', playlistFlag];
+  
   if (currentTask.mode === 'audio') {
     args.push('-x', '--audio-format', 'mp3', '-o', `${currentTask.savePath}/%(title)s.%(ext)s`, currentTask.url);
   } else {
@@ -72,7 +75,15 @@ ipcMain.on('add-to-queue', async (event, data) => {
   const result = await dialog.showOpenDialog(mainWindow, { properties: ['openDirectory'] });
   if (result.canceled) return;
   const savePath = result.filePaths[0].replace(/\\/g, '/');
-  downloadQueue.push({ url: data.url, mode: data.mode, savePath: savePath });
+  
+  // Added isPlaylist to the task data
+  downloadQueue.push({ 
+    url: data.url, 
+    mode: data.mode, 
+    savePath: savePath, 
+    isPlaylist: data.isPlaylist 
+  });
+  
   logStatus(data.url, 'In Queue', data.mode);
   event.reply('update-queue', downloadQueue);
   if (!isDownloading) processQueue();
